@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "gbdhsignal"
+version = "0.1.0"
+description = ""
+authors = ["boke0 <boke0@u-gen.site>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pycryptodome = "^3.14.1"
+Flask = "^2.1.2"
+SQLAlchemy = "^1.4.36"
+Flask-SQLAlchemy = "^2.5.1"
+Flask-RESTful = "^0.3.9"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
