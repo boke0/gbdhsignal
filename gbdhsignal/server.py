@@ -133,3 +133,7 @@ api.add_resource(RoomResource, '/rooms/<number>')
 api.add_resource(ChatResource, '/rooms/<number>/chat')
 api.add_resource(UsersResource, '/users')
 api.add_resource(UserResource, '/users/<number>')
+
+
+def run():
+    app.run(host='0.0.0.0', port=8080, threaded=False)
