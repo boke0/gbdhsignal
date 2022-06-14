@@ -87,7 +87,7 @@ func (tree KeyExchangeTreeNode) IsFull() bool {
 
 func (tree KeyExchangeTreeNode) HasPrivate() bool {
 	if tree.Right == nil && tree.Left == nil {
-		return true
+		return tree.PrivateKey != nil
 	} else {
 		return tree.Left.HasPrivate() || tree.Right.HasPrivate()
 	}
@@ -105,20 +105,21 @@ func (tree KeyExchangeTreeNode) GetPrivateKey() []byte {
 
 func (tree *KeyExchangeTreeNode) AttachKeys(keys [][]byte) {
 	tree.PublicKey = &keys[0]
-	if (tree.Left != nil && tree.Left.Count() >= 1) || tree.Right != nil {
+	if tree.Left != nil && tree.Left.Count() >= 1 {
 		l := tree.Left.Count()
-		tree.Left.AttachKeys(keys[1 : l])
+		tree.Left.AttachKeys(keys[1 : l+1])
+	}
+	if tree.Right != nil && tree.Right.Count() >= 1 {
+		l := tree.Left.Count()
 		tree.Right.AttachKeys(keys[l : l+tree.Right.Count()])
 	}
 }
 
 func (tree KeyExchangeTreeNode) Exchange() ([]byte, [][]byte) {
-	if tree.Left == nil || tree.Right == nil {
-		if tree.PrivateKey != nil {
-			return *tree.PrivateKey, [][]byte{}
-		} else {
-			return *tree.PublicKey, [][]byte{}
-		}
+	if tree.PrivateKey != nil {
+		return *tree.PrivateKey, [][]byte{}
+	} else if tree.PublicKey != nil && !tree.HasPrivate() {
+		return *tree.PublicKey, [][]byte{}
 	} else {
 		var privateKey, publicKey []byte
 		var nodeLeftPublicKeys, nodeRightPublicKeys [][]byte
@@ -289,12 +290,12 @@ func main() {
 				Id:         2,
 				IsActive:   false,
 				PublicKey:  &pubKeyC,
-				PrivateKey: &privKeyC,
 			},
 			{
 				Id:        3,
 				IsActive:  false,
 				PublicKey: &pubKeyD,
+				PrivateKey: &privKeyD,
 			},
 		},
 	}
@@ -352,22 +353,29 @@ func main() {
 	for i, nodeKey := range nodeKeysA {
 		fmt.Printf("node %d key is %x\n", i, nodeKey)
 	}
+	printTree(&treeA, 0)
 	treeB.AttachKeys(nodeKeysA)
+	treeB.PublicKey = nil
 	sharedKeyB, nodeKeysB := treeB.Exchange()
 	fmt.Printf("shared key is %x\n", sharedKeyB)
 	for i, nodeKey := range nodeKeysB {
 		fmt.Printf("node %d key is %x\n", i, nodeKey)
 	}
+	printTree(&treeB, 0)
 	treeC.AttachKeys(nodeKeysA)
+	treeC.PublicKey = nil
 	sharedKeyC, nodeKeysC := treeC.Exchange()
 	fmt.Printf("shared key is %x\n", sharedKeyC)
 	for i, nodeKey := range nodeKeysC {
 		fmt.Printf("node %d key is %x\n", i, nodeKey)
 	}
+	printTree(&treeC, 0)
 	treeD.AttachKeys(nodeKeysA)
+	treeD.PublicKey = nil
 	sharedKeyD, nodeKeysD := treeD.Exchange()
 	fmt.Printf("shared key is %x\n", sharedKeyD)
 	for i, nodeKey := range nodeKeysD {
 		fmt.Printf("node %d key is %x\n", i, nodeKey)
 	}
+	printTree(&treeD, 0)
 }
