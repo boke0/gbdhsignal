@@ -58,9 +58,14 @@ func (tree KeyExchangeTreeNode) Add(member RoomMember) KeyExchangeTreeNode {
 
 func (tree KeyExchangeTreeNode) Count() int {
 	if tree.Right == nil || tree.Left == nil {
-		return 1
+		return 0
 	} else {
-		return tree.Right.Count() + tree.Left.Count()
+		result := tree.Right.Count() + tree.Left.Count()
+		if result == 0 {
+			return 1
+		} else {
+			return result
+		}
 	}
 }
 
@@ -98,24 +103,37 @@ func (tree KeyExchangeTreeNode) GetPrivateKey() []byte {
 	}
 }
 
-func (tree KeyExchangeTreeNode) Exchange() []byte {
+func (tree *KeyExchangeTreeNode) AttachKeys(keys [][]byte) {
+	tree.PublicKey = &keys[0]
+	if (tree.Left != nil && tree.Left.Count() >= 1) || tree.Right != nil {
+		l := tree.Left.Count()
+		tree.Left.AttachKeys(keys[1 : l])
+		tree.Right.AttachKeys(keys[l : l+tree.Right.Count()])
+	}
+}
+
+func (tree KeyExchangeTreeNode) Exchange() ([]byte, [][]byte) {
 	if tree.Left == nil || tree.Right == nil {
 		if tree.PrivateKey != nil {
-			return *tree.PrivateKey
-		}else{
-			return *tree.PublicKey
-		}
-	}else{
-		var privateKey, publicKey []byte
-		if tree.Left.HasPrivate() {
-			privateKey = tree.Left.Exchange()
-			publicKey = tree.Right.Exchange()
+			return *tree.PrivateKey, [][]byte{}
 		} else {
-			privateKey = tree.Right.Exchange()
-			publicKey = tree.Left.Exchange()
+			return *tree.PublicKey, [][]byte{}
+		}
+	} else {
+		var privateKey, publicKey []byte
+		var nodeLeftPublicKeys, nodeRightPublicKeys [][]byte
+		if tree.Left.HasPrivate() {
+			privateKey, nodeLeftPublicKeys = tree.Left.Exchange()
+			publicKey, nodeRightPublicKeys = tree.Right.Exchange()
+		} else {
+			privateKey, nodeRightPublicKeys = tree.Right.Exchange()
+			publicKey, nodeLeftPublicKeys = tree.Left.Exchange()
 		}
 		result, _ := curve25519.X25519(privateKey, publicKey)
-		return result
+		nodePublicKeys := [][]byte{AsPublic(result)}
+		nodePublicKeys = append(nodePublicKeys, nodeLeftPublicKeys...)
+		nodePublicKeys = append(nodePublicKeys, nodeRightPublicKeys...)
+		return result, nodePublicKeys
 	}
 }
 
@@ -166,10 +184,12 @@ func SortMembers(members []RoomMember) []RoomMember {
 	return members_
 }
 
+func AsPublic(priv []byte) []byte {
+	pub, _ := curve25519.X25519(priv, curve25519.Basepoint)
+	return pub
+}
+
 func main() {
-	room := Room{
-		Members: []RoomMember{},
-	}
 	privKeyA := randomByte(curve25519.ScalarSize)
 	pubKeyA, _ := curve25519.X25519(privKeyA, curve25519.Basepoint)
 	privKeyB := randomByte(curve25519.ScalarSize)
@@ -178,50 +198,176 @@ func main() {
 	pubKeyC, _ := curve25519.X25519(privKeyC, curve25519.Basepoint)
 	privKeyD := randomByte(curve25519.ScalarSize)
 	pubKeyD, _ := curve25519.X25519(privKeyD, curve25519.Basepoint)
-	room.Members = append(room.Members, RoomMember{
-		Id:         0,
-		IsActive:   false,
-		PublicKey:  &pubKeyA,
-		PrivateKey: &privKeyA,
-	})
-	room.Members = append(room.Members, RoomMember{
-		Id:         1,
-		IsActive:   false,
-		PublicKey:  &pubKeyB,
-		PrivateKey: &privKeyB,
-	})
-	room.Members = append(room.Members, RoomMember{
-		Id:         2,
-		IsActive:   false,
-		PublicKey:  &pubKeyC,
-		PrivateKey: &privKeyC,
-	})
-	room.Members = append(room.Members, RoomMember{
-		Id:         3,
-		IsActive:   true,
-		PublicKey:  &pubKeyD,
-		PrivateKey: &privKeyD,
-	})
-	var tree KeyExchangeTreeNode
-	for index, member := range SortMembers(room.Members) {
+	roomA := Room{
+		Members: []RoomMember{
+			{
+				Id:         0,
+				IsActive:   true,
+				PublicKey:  &pubKeyA,
+				PrivateKey: &privKeyA,
+			},
+			{
+				Id:        1,
+				IsActive:  false,
+				PublicKey: &pubKeyB,
+			},
+			{
+				Id:        2,
+				IsActive:  false,
+				PublicKey: &pubKeyC,
+			},
+			{
+				Id:        3,
+				IsActive:  false,
+				PublicKey: &pubKeyD,
+			},
+		},
+	}
+	roomB := Room{
+		Members: []RoomMember{
+			{
+				Id:        0,
+				IsActive:  true,
+				PublicKey: &pubKeyA,
+			},
+			{
+				Id:         1,
+				IsActive:   false,
+				PublicKey:  &pubKeyB,
+				PrivateKey: &privKeyB,
+			},
+			{
+				Id:        2,
+				IsActive:  false,
+				PublicKey: &pubKeyC,
+			},
+			{
+				Id:        3,
+				IsActive:  false,
+				PublicKey: &pubKeyD,
+			},
+		},
+	}
+	roomC := Room{
+		Members: []RoomMember{
+			{
+				Id:        0,
+				IsActive:  true,
+				PublicKey: &pubKeyA,
+			},
+			{
+				Id:        1,
+				IsActive:  false,
+				PublicKey: &pubKeyB,
+			},
+			{
+				Id:         2,
+				IsActive:   false,
+				PublicKey:  &pubKeyC,
+				PrivateKey: &privKeyC,
+			},
+			{
+				Id:        3,
+				IsActive:  false,
+				PublicKey: &pubKeyD,
+			},
+		},
+	}
+	roomD := Room{
+		Members: []RoomMember{
+			{
+				Id:        0,
+				IsActive:  true,
+				PublicKey: &pubKeyA,
+			},
+			{
+				Id:        1,
+				IsActive:  false,
+				PublicKey: &pubKeyB,
+			},
+			{
+				Id:         2,
+				IsActive:   false,
+				PublicKey:  &pubKeyC,
+				PrivateKey: &privKeyC,
+			},
+			{
+				Id:        3,
+				IsActive:  false,
+				PublicKey: &pubKeyD,
+			},
+		},
+	}
+	var treeA, treeB, treeC, treeD KeyExchangeTreeNode
+	for index, member := range SortMembers(roomA.Members) {
 		if index == 0 {
-			tree = KeyExchangeTreeNode{
+			treeA = KeyExchangeTreeNode{
 				Id:         member.Id,
 				Active:     member.IsActive,
 				PublicKey:  member.PublicKey,
 				PrivateKey: member.PrivateKey,
 			}
 		} else {
-			tree = tree.Add(member)
+			treeA = treeA.Add(member)
 		}
 	}
-	for _, member := range SortMembers(room.Members) {
-		if member.IsActive {
-			fmt.Printf("[%d] ", member.Id)
+	for index, member := range SortMembers(roomB.Members) {
+		if index == 0 {
+			treeB = KeyExchangeTreeNode{
+				Id:         member.Id,
+				Active:     member.IsActive,
+				PublicKey:  member.PublicKey,
+				PrivateKey: member.PrivateKey,
+			}
 		} else {
-			fmt.Printf("(%d) ", member.Id)
+			treeB = treeB.Add(member)
 		}
 	}
-	printTree(&tree, 0)
-	fmt.Printf("shared key is %x\n", tree.Exchange())
+	for index, member := range SortMembers(roomC.Members) {
+		if index == 0 {
+			treeC = KeyExchangeTreeNode{
+				Id:         member.Id,
+				Active:     member.IsActive,
+				PublicKey:  member.PublicKey,
+				PrivateKey: member.PrivateKey,
+			}
+		} else {
+			treeC = treeC.Add(member)
+		}
+	}
+	for index, member := range SortMembers(roomD.Members) {
+		if index == 0 {
+			treeD = KeyExchangeTreeNode{
+				Id:         member.Id,
+				Active:     member.IsActive,
+				PublicKey:  member.PublicKey,
+				PrivateKey: member.PrivateKey,
+			}
+		} else {
+			treeD = treeD.Add(member)
+		}
+	}
+	sharedKeyA, nodeKeysA := treeA.Exchange()
+	fmt.Printf("shared key is %x\n", sharedKeyA)
+	for i, nodeKey := range nodeKeysA {
+		fmt.Printf("node %d key is %x\n", i, nodeKey)
+	}
+	treeB.AttachKeys(nodeKeysA)
+	sharedKeyB, nodeKeysB := treeB.Exchange()
+	fmt.Printf("shared key is %x\n", sharedKeyB)
+	for i, nodeKey := range nodeKeysB {
+		fmt.Printf("node %d key is %x\n", i, nodeKey)
+	}
+	treeC.AttachKeys(nodeKeysA)
+	sharedKeyC, nodeKeysC := treeC.Exchange()
+	fmt.Printf("shared key is %x\n", sharedKeyC)
+	for i, nodeKey := range nodeKeysC {
+		fmt.Printf("node %d key is %x\n", i, nodeKey)
+	}
+	treeD.AttachKeys(nodeKeysA)
+	sharedKeyD, nodeKeysD := treeD.Exchange()
+	fmt.Printf("shared key is %x\n", sharedKeyD)
+	for i, nodeKey := range nodeKeysD {
+		fmt.Printf("node %d key is %x\n", i, nodeKey)
+	}
 }
