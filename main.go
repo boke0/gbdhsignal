@@ -6,6 +6,7 @@ import (
 	"crypto/cipher"
 	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha256"
 	"crypto/sha512"
 	"fmt"
 	"io"
@@ -368,15 +369,16 @@ func (tree KeyExchangeTreeNode) Exchange() ([]byte, []NodePublicKey) {
 			publicKey, nodeLeftPublicKeys = tree.Left.Exchange()
 		}
 		result, _ := curve25519.X25519(privateKey, publicKey)
+		key := sha256.Sum256(result)
 		nodePublicKeys := []NodePublicKey{
 			{
 				NodeId: tree.Id,
-				PublicKey: AsPublic(result),
+				PublicKey: AsPublic(key[:]),
 			},
 		}
 		nodePublicKeys = append(nodePublicKeys, nodeLeftPublicKeys...)
 		nodePublicKeys = append(nodePublicKeys, nodeRightPublicKeys...)
-		return result, nodePublicKeys
+		return key[:], nodePublicKeys
 	}
 }
 
