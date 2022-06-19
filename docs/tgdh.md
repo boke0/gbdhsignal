@@ -25,7 +25,7 @@ TGDH(Tree-based Group Diffie Hellman)について
 両枝のうち自分の葉ノードが属する枝の秘密鍵と、もう片方の公開鍵の合意鍵を求め、ハッシュ値を取ったものをそのノードの秘密鍵とする。
 
 $$
-K_{st}^{priv} = H\left(ECDH\left(K_{s}^{priv}, K_{t}^{pub}\left)\right)
+K_{st}^{priv} = H\left(ECDH\left(K_{s}^{priv}, K_{t}^{pub}\right)\right)
 $$
 
 この方法により、最終的に根ノードの秘密鍵となるものを全体の合意鍵とする。
