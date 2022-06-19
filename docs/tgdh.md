@@ -4,7 +4,7 @@ TGDH(Tree-based Group Diffie Hellman)について
 # アルゴリズム
 ## 0. 前提
 各参加者$A,B,C,...$には予め順番が決められている。
-それぞれのj番目の鍵ペア$K_{i,j}^{priv}, K_{i}^{pub} \left(i \in \left\{A,B,C,\ldots\right\}\right)$とし、ハッシュ関数$H: \left(x\right) \rightarrow y$とする
+それぞれのj番目の鍵ペア$K_{i,j}^{priv}, K_{i}^{pub} \left(i \in A,B,C,\ldots \right)$とし、ハッシュ関数$H: \left(x\right) \rightarrow y$とする
 参加者は事前に$K_{i,j}^{pub}$を他の参加者に共有しておく。
 また、各参加者が既に一回以上発言しているかどうかを表す変数$F_{i} \left(i \in A,B,C,\ldots \right)$とする。
 
