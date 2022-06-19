@@ -4,9 +4,9 @@ TGDH(Tree-based Group Diffie Hellman)について
 # アルゴリズム
 ## 0. 前提
 各参加者$A,B,C,...$には予め順番が決められている。
-それぞれのj番目の鍵ペア$K_{i,j}^{priv}, K_{i}^{pub} \left(i \in \left\{A,B,C,\ldots\right}\right)$とし、ハッシュ関数$H: \left(x\right) \rightarrow y$とする
+それぞれのj番目の鍵ペア$K_{i,j}^{priv}, K_{i}^{pub} \left(i \in \left\{A,B,C,\ldots\right\}\right)$とし、ハッシュ関数$H: \left(x\right) \rightarrow y$とする
 参加者は事前に$K_{i,j}^{pub}$を他の参加者に共有しておく。
-また、各参加者が既に一回以上発言しているかどうかを表す変数$F_{i} \left(i \in \left\{A,B,C,\ldots\right}\right)$とする。
+また、各参加者が既に一回以上発言しているかどうかを表す変数$F_{i} \left(i \in \left\{A,B,C,\ldots\right\}\right)$とする。
 
 ## 1. ソート
 最初から2人ずつ調べてゆき、2人のうち既に発言を一回以上しているかどうかを確認し、発言している2人組がしていない組よりも前に現れるようにソートする。
@@ -25,7 +25,7 @@ TGDH(Tree-based Group Diffie Hellman)について
 両枝のうち自分の葉ノードが属する枝の秘密鍵と、もう片方の公開鍵の合意鍵を求め、ハッシュ値を取ったものをそのノードの秘密鍵とする。
 
 $$
-K_{st}^{priv} = H\left(ECDH(K_{s}^{priv}, K_{t}^{pub})\right)
+K_{st}^{priv} = H\left(ECDH\left(K_{s}^{priv}, K_{t}^{pub}\left)\right)
 $$
 
 この方法により、最終的に根ノードの秘密鍵となるものを全体の合意鍵とする。
