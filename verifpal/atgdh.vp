@@ -1,0 +1,286 @@
+attacker[active]
+
+principal Alice[
+    knows private ae0, c0
+    gae0 = G^ae0
+]
+
+principal Bob[
+    knows private be0, c0
+    gbe0 = G^be0
+]
+
+principal Charlie[
+    knows private ce0, c0
+    gce0 = G^ce0
+]
+
+principal Dave[
+    knows private de0, c0
+    gde0 = G^de0
+]
+
+principal Ellen[
+    knows private ee0, c0
+    gee0 = G^ee0
+]
+
+
+Bob -> Alice: [gbe0]
+Charlie -> Alice: [gce0]
+Dave -> Alice: [gde0]
+Ellen -> Alice: [gee0]
+Alice -> Bob: [gae0]
+Charlie -> Bob: [gce0]
+Dave -> Bob: [gde0]
+Ellen -> Bob: [gee0]
+Alice -> Charlie: [gae0]
+Bob -> Charlie: [gbe0]
+Dave -> Charlie: [gde0]
+Ellen -> Charlie: [gee0]
+Alice -> Dave: [gae0]
+Bob -> Dave: [gbe0]
+Charlie -> Dave: [gce0]
+Ellen -> Dave: [gee0]
+Alice -> Ellen: [gae0]
+Bob -> Ellen: [gbe0]
+Charlie -> Ellen: [gce0]
+Dave -> Ellen: [gde0]
+
+principal Alice[
+    generates ae1, m1
+    gae1 = G^ae1
+    akab1 = HASH(gbe0^ae1)
+    akabc1 = HASH(gce0^akab1)
+    akabcd1 = HASH(gde0^akabc1)
+    akabcde1 = HASH(gee0^akabcd1)
+
+    gkab1 = G^akab1
+    gkabc1 = G^akabc1
+    gkabcd1 = G^akabcd1
+    e1 = AEAD_ENC(akabcde1, m1, c0)
+]
+
+Alice -> Bob: [gae1], [gkab1], [gkabc1], [gkabcd1], e1
+Alice -> Charlie: [gae1], [gkab1], [gkabc1], [gkabcd1], e1
+Alice -> Dave: [gae1], [gkab1], [gkabc1], [gkabcd1], e1
+Alice -> Ellen: [gae1], [gkab1], [gkabc1], [gkabcd1], e1
+
+principal Bob[
+    bkab1 = HASH(gae1^be0)
+    bkabc1 = HASH(gce0^bkab1)
+    bkabcd1 = HASH(gde0^bkabc1)
+    bkabcde1 = HASH(gee0^bkabcd1)
+    bm1 = AEAD_DEC(bkabcde1, e1, c0)?
+]
+
+principal Charlie[
+    ckabc1 = HASH(gkab1^ce0)
+    ckabcd1 = HASH(gde0^ckabc1)
+    ckabcde1 = HASH(gee0^ckabcd1)
+    cm1 = AEAD_DEC(ckabcde1, e1, c0)?
+]
+
+principal Dave[
+    dkabcd1 = HASH(gkabc1^de0)
+    dkabcde1 = HASH(gee0^dkabcd1)
+    dm1 = AEAD_DEC(dkabcde1, e1, c0)?
+]
+
+principal Ellen[
+    ekabcde1 = HASH(gkabcd1^ee0)
+    em1 = AEAD_DEC(ekabcde1, e1, c0)?
+]
+
+principal Bob[
+    generates be2, m2
+    gbe2 = G^be2
+    bkab2 = HASH(gae1^be2)
+    bkabc2 = HASH(gce0^bkab2)
+    bkabcd2 = HASH(gde0^bkabc2)
+    bkabcde2 = HASH(gee0^bkabcd2)
+
+    gkab2 = G^bkab2
+    gkabc2 = G^bkabc2
+    gkabcd2 = G^bkabcd2
+    gkabcde2 = G^bkabcde2
+    e2 = AEAD_ENC(bkabcde2, m2, c0)
+]
+
+Bob -> Alice: [gbe2], [gkab2], [gkabc2], [gkabcd2], e2
+Bob -> Charlie: [gbe2], [gkab2], [gkabc2], [gkabcd2], e2
+Bob -> Dave: [gbe2], [gkab2], [gkabc2], [gkabcd2], e2
+Bob -> Ellen: [gbe2], [gkab2], [gkabc2], [gkabcd2], e2
+
+principal Alice[
+    akab2 = HASH(gbe2^ae1)
+    akabc2 = HASH(gce0^akab2)
+    akabcd2 = HASH(gde0^akabc2)
+    akabcde2 = HASH(gee0^akabcd2)
+    am2 = AEAD_DEC(akabcde2, e2, c0)?
+]
+
+principal Charlie[
+    ckabc2 = HASH(gkab2^ce0)
+    ckabcd2 = HASH(gde0^ckabc2)
+    ckabcde2 = HASH(gee0^ckabcd2)
+    cm2 = AEAD_DEC(ckabcde2, e2, c0)?
+]
+
+principal Dave[
+    dkabcd2 = HASH(gkabc2^de0)
+    dkabcde2 = HASH(gee0^dkabcd2)
+    dm2 = AEAD_DEC(dkabcde2, e2, c0)?
+]
+
+principal Ellen[
+    ekabcde2 = HASH(gkabcd2^ee0)
+    em2 = AEAD_DEC(ekabcde2, e2, c0)?
+]
+
+principal Charlie[
+    generates ce3, m3
+    gce3 = G^ce3
+    ckcd3 = HASH(gde0^ce3)
+    ckabcd3 = HASH(gkab2^ckcd3)
+    ckabcde3 = HASH(gee0^ckabcd3)
+
+    gkcd3 = G^ckcd3
+    gkabcd3 = G^ckabcd3
+    e3 = AEAD_ENC(ckabcde3, m3, c0)
+]
+
+Charlie -> Alice: [gce3], [gkcd3], [gkabcd3], e3
+Charlie -> Bob: [gce3], [gkcd3], [gkabcd3], e3
+Charlie -> Dave: [gce3], [gkcd3], [gkabcd3], e3
+Charlie -> Ellen: [gce3], [gkcd3], [gkabcd3], e3
+
+principal Alice[
+    akabcd3 = HASH(gkcd3^akab2)
+    akabcde3 = HASH(gee0^akabcd3)
+    am3 = AEAD_DEC(akabcde3, e3, c0)?
+]
+
+principal Bob[
+    bkabcd3 = HASH(gkcd3^bkab2)
+    bkabcde3 = HASH(gee0^bkabcd3)
+    bm3 = AEAD_DEC(bkabcde3, e3, c0)?
+]
+
+principal Dave[
+    dkcd3 = HASH(gce3^de0)
+    dkabcd3 = HASH(gkab2^dkcd3)
+    dkabcde3 = HASH(gee0^dkabcd3)
+    dm3 = AEAD_DEC(dkabcde3, e3, c0)?
+]
+
+principal Ellen[
+    ekabcde3 = HASH(gkabcd3^ee0)
+    em3 = AEAD_DEC(ekabcde3, e3, c0)?
+]
+
+principal Dave[
+    generates de4, m4
+    gde4 = G^de4
+    dkcd4 = HASH(gce3^de4)
+    dkabcd4 = HASH(gkab2^dkcd4)
+    dkabcde4 = HASH(gee0^dkabcd4)
+
+    gkcd4 = G^dkcd4
+    gkabcd4 = G^dkabcd4
+    e4 = AEAD_ENC(dkabcde4, m4, c0)
+]
+
+Dave -> Alice: [gde4], [gkcd4], [gkabcd4], e4
+Dave -> Bob: [gde4], [gkcd4], [gkabcd4], e4
+Dave -> Charlie: [gde4], [gkcd4], [gkabcd4], e4
+Dave -> Ellen: [gde4], [gkcd4], [gkabcd4], e4
+
+principal Alice[
+    akabcd4 = HASH(gkcd4^akab2)
+    akabcde4 = HASH(gee0^akabcd4)
+    am4 = AEAD_DEC(akabcde4, e4, c0)?
+]
+
+principal Bob[
+    bkabcd4 = HASH(gkcd4^bkab2)
+    bkabcde4 = HASH(gee0^bkabcd4)
+    bm4 = AEAD_DEC(bkabcde4, e4, c0)?
+]
+
+principal Charlie[
+    ckcd4 = HASH(gde4^ce3)
+    ckabcd4 = HASH(gkab2^ckcd4)
+    ckabcde4 = HASH(gee0^ckabcd4)
+    cm4 = AEAD_DEC(ckabcde4, e4, c0)?
+]
+
+principal Ellen[
+    ekabcde4 = HASH(gkabcd4^ee0)
+    em4 = AEAD_DEC(ekabcde4, e4, c0)?
+]
+
+principal Ellen[
+    generates ee5, m5
+    gee5 = G^ee5
+    ekabcde5 = HASH(gkabcd4^ee5)
+
+    e5 = AEAD_ENC(ekabcde5, m5, c0)
+]
+
+Ellen -> Alice: [gee5], e5
+Ellen -> Bob: [gee5], e5
+Ellen -> Charlie: [gee5], e5
+Ellen -> Dave: [gee5], e5
+
+principal Alice[
+    akabcde5 = HASH(gee5^akabcd4)
+    am5 = AEAD_DEC(akabcde5, e5, c0)?
+]
+
+principal Bob[
+    bkabcde5 = HASH(gee5^bkabcd4)
+    bm5 = AEAD_DEC(bkabcde5, e5, c0)?
+]
+
+principal Charlie[
+    ckabcde5 = HASH(gee5^ckabcd4)
+    cm5 = AEAD_DEC(ckabcde5, e5, c0)?
+]
+
+principal Dave[
+    dkabcde5 = HASH(gee5^dkabcd4)
+    dm5 = AEAD_DEC(dkabcde5, e5, c0)?
+]
+
+queries[
+    confidentiality? m1
+    authentication? Alice -> Bob: e1
+    authentication? Alice -> Charlie: e1
+    authentication? Alice -> Dave: e1
+    authentication? Alice -> Ellen: e1
+
+    confidentiality? m2
+    authentication? Bob -> Alice: e2
+    authentication? Bob -> Charlie: e2
+    authentication? Bob -> Dave: e2
+    authentication? Bob -> Ellen: e2
+
+    confidentiality? m3
+    authentication? Charlie -> Alice: e3
+    authentication? Charlie -> Bob: e3
+    authentication? Charlie -> Dave: e3
+    authentication? Charlie -> Ellen: e3
+
+    confidentiality? m4
+    authentication? Dave -> Alice: e4
+    authentication? Dave -> Bob: e4
+    authentication? Dave -> Charlie: e4
+    authentication? Dave -> Ellen: e4
+
+    confidentiality? m5
+    authentication? Ellen -> Alice: e5
+    authentication? Ellen -> Bob: e5
+    authentication? Ellen -> Charlie: e5
+    authentication? Ellen -> Dave: e5
+]
