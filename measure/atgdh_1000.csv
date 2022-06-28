@@ -1,2 +1,2 @@
-count, enc_ticks, average_dec_ticks,
-0, 401145, 1700851,
+count, enc_ticks, average_dec_ticks, max_ticks, min_ticks
+0, 371833, 
