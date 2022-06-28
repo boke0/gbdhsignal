@@ -1,2 +1,12 @@
+github.com/boke0/hippocampus v1.0.0 h1:hTGaEwOooDGZuNOa8LAwQhVVEtuMNzxtf3hG6kj+60c=
+github.com/boke0/hippocampus v1.0.0/go.mod h1:LbmSZgMOw2PLTg+VUBRD15LsnRBMz4vTVznAEdrt6gQ=
+github.com/boke0/hippocampus v1.0.1 h1:qehujDvoADg/oDF3abbU5aQn8u+oFQCixjYbohM62AU=
+github.com/boke0/hippocampus v1.0.1/go.mod h1:LbmSZgMOw2PLTg+VUBRD15LsnRBMz4vTVznAEdrt6gQ=
+github.com/boke0/hippocampus v1.1.0 h1:YIRF4c2dnPxXyT3QOIVOKmSZIpS7YfQL1K3a6QTFS/Y=
+github.com/boke0/hippocampus v1.1.0/go.mod h1:LbmSZgMOw2PLTg+VUBRD15LsnRBMz4vTVznAEdrt6gQ=
+github.com/boke0/hippocampus v1.1.1 h1:YrF0SZn4H0jzedCxX7UbU3HMN1ZO3G0UpdM+UYf3UUo=
+github.com/boke0/hippocampus v1.1.1/go.mod h1:LbmSZgMOw2PLTg+VUBRD15LsnRBMz4vTVznAEdrt6gQ=
+github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
+github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e h1:T8NU3HyQ8ClP4SEE+KbFlg6n0NhuTsN4MyznaarGsZM=
 golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e/go.mod h1:IxCIyHEi3zRg3s0A5j5BB6A9Jmi73HwBIUl50j+osU4=
