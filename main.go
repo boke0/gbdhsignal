@@ -26,8 +26,10 @@ func main() {
 		ratchets = append(ratchets, ratchet)
 	}
 	fmt.Printf("count, enc_ticks")
+	fmt.Fprintf(os.Stderr, "count, enc_ticks")
 	for i := 0; i < 500; i++ {
 		fmt.Printf(", %s", ratchets[i].Id)
+		fmt.Fprintf(os.Stderr, ", %s", ratchets[i].Id)
 	}
 	fmt.Println("")
 	cwd, _ := os.Getwd()
@@ -41,6 +43,7 @@ func main() {
 		message := ratchets[i%500].Encrypt("hogehogehugahugapiyopiyo")
 		enc_ticks := time.Since(enc_start).Microseconds()
 		fmt.Printf("%d, %d", i, enc_ticks)
+		fmt.Fprintf(os.Stderr, "%d, %d", i, enc_ticks)
 		{
 			engine, _ := ratchets[i%500].Cache.Engine.(InmemoryEngine[NodePublicKey])
 			engine.Export("./.cache/" + ratchets[i%500].Id + ".json")
@@ -57,15 +60,18 @@ func main() {
 				ratchets[j].Decrypt(message)
 				dec_tick := time.Since(dec_start).Microseconds()
 				fmt.Printf(", %d", dec_tick)
+				fmt.Fprintf(os.Stderr, ", %d", dec_tick)
 				engine, _ := ratchets[j].Cache.Engine.(InmemoryEngine[NodePublicKey])
 				engine.Export("./.cache/" + ratchets[j].Id + ".json")
 				engine.Clear()
 				ratchets[j].Cache.Engine = engine
 			} else {
 				fmt.Printf(", ")
+				fmt.Fprintf(os.Stderr, ", ")
 			}
 		}
 		fmt.Printf("\n")
+		fmt.Fprintf(os.Stderr, "\n")
 	}
 }
 
