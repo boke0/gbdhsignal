@@ -150,9 +150,9 @@ func (tree KeyExchangeTreeNode) GetPrivateKey() []byte {
 	}
 }
 
-func (tree *KeyExchangeTreeNode) AttachKeys(keys hippocampus.Hippocampus) {
+func (tree *KeyExchangeTreeNode) AttachKeys(keys hippocampus.Hippocampus[NodePublicKey]) {
 	if cached, exists := keys.Get(tree.Id); exists {
-		key := cached.(NodePublicKey)
+		key := cached
 		tree.PublicKey = &key.PublicKey
 	}
 	if tree.Left != nil && tree.Left.Count() >= 1 {
@@ -166,10 +166,8 @@ func (tree *KeyExchangeTreeNode) AttachKeys(keys hippocampus.Hippocampus) {
 func (tree *KeyExchangeTreeNode) Exists(key string) bool {
 	if tree.Id == key {
 		return true
-	}else if tree.Left != nil && tree.Right != nil {
+	}else{
 		return tree.Left.Exists(key) || tree.Right.Exists(key)
-	}else {
-		return false
 	}
 }
 
@@ -229,11 +227,6 @@ func ATGDHExchange(rat *Ratchet, nodePublicKeys map[string]NodePublicKey) ([]byt
 			} else {
 				tree = tree.Add(members[i])
 			}
-		}
-	}
-	for _, key := range rat.Cache.Keys() {
-		if !tree.Exists(key) {
-			rat.Cache.Delete(key)
 		}
 	}
 	if len(nodePublicKeys) > 0 {

@@ -20,7 +20,7 @@ type ExchangeMethodType func(*Ratchet, map[string]NodePublicKey) ([]byte, map[st
 
 type Ratchet struct {
 	Id             string
-	Cache          hippocampus.Hippocampus
+	Cache          hippocampus.Hippocampus[NodePublicKey]
 	PrivateKey     []byte
 	PublicKey      []byte
 	ChainKey       []byte
@@ -34,7 +34,7 @@ func NewRatchet(id string, method ExchangeMethodType, members []RoomMember) Ratc
 	return Ratchet{
 		speaker:        nil,
 		Id:             id,
-		Cache:          hippocampus.NewHippocampus(inmemory.NewInmemoryEngine()),
+		Cache:          hippocampus.NewHippocampus[NodePublicKey](inmemory.NewInmemoryEngine[NodePublicKey]()),
 		ExchangeMethod: method,
 		Members:        members,
 	}
