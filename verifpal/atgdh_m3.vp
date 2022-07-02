@@ -1,5 +1,8 @@
 attacker[active]
 
+principal Server[
+]
+
 principal Alice[
     knows private ka0, c0
     gka0 = G^ka0
@@ -25,27 +28,21 @@ principal Ellen[
     gke0 = G^ke0
 ]
 
+Alice -> Server: [gka0]
+Bob -> Server: [gkb0]
+Charlie -> Server: [gkc0]
+Dave -> Server: [gkd0]
+Ellen -> Server: [gke0]
 
-Bob -> Alice: [gkb0]
-Charlie -> Alice: [gkc0]
-Dave -> Alice: [gkd0]
-Ellen -> Alice: [gke0]
-Alice -> Bob: [gka0]
-Charlie -> Bob: [gkc0]
-Dave -> Bob: [gkd0]
-Ellen -> Bob: [gke0]
-Alice -> Charlie: [gka0]
-Bob -> Charlie: [gkb0]
-Dave -> Charlie: [gkd0]
-Ellen -> Charlie: [gke0]
-Alice -> Dave: [gka0]
-Bob -> Dave: [gkb0]
-Charlie -> Dave: [gkc0]
-Ellen -> Dave: [gke0]
-Alice -> Ellen: [gka0]
-Bob -> Ellen: [gkb0]
-Charlie -> Ellen: [gkc0]
-Dave -> Ellen: [gkd0]
+principal Server[
+    leaks gka0, gkb0, gkc0, gkd0, gke0
+]
+
+Server -> Alice: [gkb0], [gkc0], [gkd0], [gke0]
+Server -> Bob: [gka0], [gkc0], [gkd0], [gke0]
+Server -> Charlie: [gka0], [gkb0], [gkd0], [gke0]
+Server -> Dave: [gka0], [gkb0], [gkc0], [gke0]
+Server -> Ellen: [gka0], [gkb0], [gkc0], [gkd0]
 
 principal Alice[
     generates ka1, m1
@@ -61,10 +58,16 @@ principal Alice[
     e1 = AEAD_ENC(akabcde1, m1, c0)
 ]
 
-Alice -> Bob: [gka1], [gkab1], [gkabc1], [gkabcd1], e1
-Alice -> Charlie: [gka1], [gkab1], [gkabc1], [gkabcd1], e1
-Alice -> Dave: [gka1], [gkab1], [gkabc1], [gkabcd1], e1
-Alice -> Ellen: [gka1], [gkab1], [gkabc1], [gkabcd1], e1
+Alice -> Server: [gka1], [gkab1], [gkabc1], [gkabcd1], e1
+
+principal Server[
+    leaks gka1, gkab1, gkabc1, gkabcd1
+]
+
+Server -> Bob: [gka1], [gkab1], [gkabc1], [gkabcd1], e1
+Server -> Charlie: [gka1], [gkab1], [gkabc1], [gkabcd1], e1
+Server -> Dave: [gka1], [gkab1], [gkabc1], [gkabcd1], e1
+Server -> Ellen: [gka1], [gkab1], [gkabc1], [gkabcd1], e1
 
 principal Bob[
     bkab1 = HASH(gka1^kb0)
@@ -93,77 +96,89 @@ principal Ellen[
 ]
 
 principal Charlie[
-    generates kc2, m2
-    gkc2 = G^kc2
-    ckcd2 = HASH(gkd0^kc2)
-    ckabcd2 = HASH(gkab1^ckcd2)
-    ckabcde2 = HASH(gke0^ckabcd2)
+    generates kc3, m3
+    gkc3 = G^kc3
+    ckcd3 = HASH(gkd0^kc3)
+    ckabcd3 = HASH(gkab1^ckcd3)
+    ckabcde3 = HASH(gke0^ckabcd3)
 
-    gkcd2 = G^ckcd2
-    gkabcd2 = G^ckabcd2
-    e2 = AEAD_ENC(ckabcde2, m2, c0)
+    gkcd3 = G^ckcd3
+    gkabcd3 = G^ckabcd3
+    e3 = AEAD_ENC(ckabcde3, m3, c0)
 ]
 
-Charlie -> Alice: [gkc2], [gkcd2], [gkabcd2], e2
-Charlie -> Bob: [gkc2], [gkcd2], [gkabcd2], e2
-Charlie -> Dave: [gkc2], [gkcd2], [gkabcd2], e2
-Charlie -> Ellen: [gkc2], [gkcd2], [gkabcd2], e2
+Charlie -> Server: [gkc3], [gkcd3], [gkabcd3], e3
+
+principal Server[
+    leaks gkc3, gkcd3, gkabcd3
+]
+
+Server -> Alice: [gkc3], [gkcd3], [gkabcd3], e3
+Server -> Bob: [gkc3], [gkcd3], [gkabcd3], e3
+Server -> Dave: [gkc3], [gkcd3], [gkabcd3], e3
+Server -> Ellen: [gkc3], [gkcd3], [gkabcd3], e3
 
 principal Alice[
-    akabcd2 = HASH(gkcd2^akab1)
-    akabcde2 = HASH(gke0^akabcd2)
-    am2 = AEAD_DEC(akabcde2, e2, c0)?
-]
-
-principal Bob[
-    bkabcd2 = HASH(gkcd2^bkab1)
-    bkabcde2 = HASH(gke0^bkabcd2)
-    bm2 = AEAD_DEC(bkabcde2, e2, c0)?
-]
-
-principal Dave[
-    dkcd2 = HASH(gkc2^kd0)
-    dkabcd2 = HASH(gkab1^dkcd2)
-    dkabcde2 = HASH(gke0^dkabcd2)
-    dm2 = AEAD_DEC(dkabcde2, e2, c0)?
-]
-
-principal Ellen[
-    ekabcde2 = HASH(gkabcd2^ke0)
-    em2 = AEAD_DEC(ekabcde2, e2, c0)?
-]
-
-principal Ellen[
-    generates ke3, m3
-    gke3 = G^ke3
-    ekabcde3 = HASH(gkabcd2^ke3)
-
-    e3 = AEAD_ENC(ekabcde3, m3, c0)
-]
-
-Ellen -> Alice: [gke3], e3
-Ellen -> Bob: [gke3], e3
-Ellen -> Charlie: [gke3], e3
-Ellen -> Dave: [gke3], e3
-
-principal Alice[
-    akabcde3 = HASH(gke3^akabcd2)
+    akabcd3 = HASH(gkcd3^akab1)
+    akabcde3 = HASH(gke0^akabcd3)
     am3 = AEAD_DEC(akabcde3, e3, c0)?
 ]
 
 principal Bob[
-    bkabcde3 = HASH(gke3^bkabcd2)
+    bkabcd3 = HASH(gkcd3^bkab1)
+    bkabcde3 = HASH(gke0^bkabcd3)
     bm3 = AEAD_DEC(bkabcde3, e3, c0)?
 ]
 
+principal Dave[
+    dkcd3 = HASH(gkc3^kd0)
+    dkabcd3 = HASH(gkab1^dkcd3)
+    dkabcde3 = HASH(gke0^dkabcd3)
+    dm3 = AEAD_DEC(dkabcde3, e3, c0)?
+]
+
+principal Ellen[
+    ekabcde3 = HASH(gkabcd3^ke0)
+    em3 = AEAD_DEC(ekabcde3, e3, c0)?
+]
+
+principal Ellen[
+    generates ke5, m5
+    gke5 = G^ke5
+    ekabcde5 = HASH(gkabcd3^ke5)
+
+    e5 = AEAD_ENC(ekabcde5, m5, c0)
+]
+
+Ellen -> Server: [gke5], e5
+
+principal Server[
+    leaks gke5
+]
+
+Server -> Alice: [gke5], e5
+Server -> Bob: [gke5], e5
+Server -> Charlie: [gke5], e5
+Server -> Dave: [gke5], e5
+
+principal Alice[
+    akabcde5 = HASH(gke5^akabcd3)
+    am5 = AEAD_DEC(akabcde5, e5, c0)?
+]
+
+principal Bob[
+    bkabcde5 = HASH(gke5^bkabcd3)
+    bm5 = AEAD_DEC(bkabcde5, e5, c0)?
+]
+
 principal Charlie[
-    ckabcde3 = HASH(gke3^ckabcd2)
-    cm3 = AEAD_DEC(ckabcde3, e3, c0)?
+    ckabcde5 = HASH(gke5^ckabcd3)
+    cm5 = AEAD_DEC(ckabcde5, e5, c0)?
 ]
 
 principal Dave[
-    dkabcde3 = HASH(gke3^dkabcd2)
-    dm3 = AEAD_DEC(dkabcde3, e3, c0)?
+    dkabcde5 = HASH(gke5^dkabcd3)
+    dm5 = AEAD_DEC(dkabcde5, e5, c0)?
 ]
 
 queries[
@@ -173,15 +188,15 @@ queries[
     authentication? Alice -> Dave: e1
     authentication? Alice -> Ellen: e1
 
-    confidentiality? m2
-    authentication? Charlie -> Alice: e2
-    authentication? Charlie -> Bob: e2
-    authentication? Charlie -> Dave: e2
-    authentication? Charlie -> Ellen: e2
-
     confidentiality? m3
-    authentication? Ellen -> Alice: e3
-    authentication? Ellen -> Bob: e3
-    authentication? Ellen -> Charlie: e3
-    authentication? Ellen -> Dave: e3
+    authentication? Charlie -> Alice: e3
+    authentication? Charlie -> Bob: e3
+    authentication? Charlie -> Dave: e3
+    authentication? Charlie -> Ellen: e3
+
+    confidentiality? m5
+    authentication? Ellen -> Alice: e5
+    authentication? Ellen -> Bob: e5
+    authentication? Ellen -> Charlie: e5
+    authentication? Ellen -> Dave: e5
 ]

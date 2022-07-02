@@ -1,5 +1,8 @@
 attacker[active]
 
+principal Server[
+]
+
 principal Alice[
     knows private ka0, c0
     gka0 = G^ka0
@@ -25,27 +28,21 @@ principal Ellen[
     gke0 = G^ke0
 ]
 
+Alice -> Server: [gka0]
+Bob -> Server: [gkb0]
+Charlie -> Server: [gkc0]
+Dave -> Server: [gkd0]
+Ellen -> Server: [gke0]
 
-Bob -> Alice: [gkb0]
-Charlie -> Alice: [gkc0]
-Dave -> Alice: [gkd0]
-Ellen -> Alice: [gke0]
-Alice -> Bob: [gka0]
-Charlie -> Bob: [gkc0]
-Dave -> Bob: [gkd0]
-Ellen -> Bob: [gke0]
-Alice -> Charlie: [gka0]
-Bob -> Charlie: [gkb0]
-Dave -> Charlie: [gkd0]
-Ellen -> Charlie: [gke0]
-Alice -> Dave: [gka0]
-Bob -> Dave: [gkb0]
-Charlie -> Dave: [gkc0]
-Ellen -> Dave: [gke0]
-Alice -> Ellen: [gka0]
-Bob -> Ellen: [gkb0]
-Charlie -> Ellen: [gkc0]
-Dave -> Ellen: [gkd0]
+principal Server[
+    leaks gka0, gkb0, gkc0, gkd0, gke0
+]
+
+Server -> Alice: [gkb0], [gkc0], [gkd0], [gke0]
+Server -> Bob: [gka0], [gkc0], [gkd0], [gke0]
+Server -> Charlie: [gka0], [gkb0], [gkd0], [gke0]
+Server -> Dave: [gka0], [gkb0], [gkc0], [gke0]
+Server -> Ellen: [gka0], [gkb0], [gkc0], [gkd0]
 
 principal Alice[
     generates ka1, m1
@@ -61,10 +58,16 @@ principal Alice[
     e1 = AEAD_ENC(akabcde1, m1, c0)
 ]
 
-Alice -> Bob: [gka1], [gkab1], [gkabc1], [gkabcd1], e1
-Alice -> Charlie: [gka1], [gkab1], [gkabc1], [gkabcd1], e1
-Alice -> Dave: [gka1], [gkab1], [gkabc1], [gkabcd1], e1
-Alice -> Ellen: [gka1], [gkab1], [gkabc1], [gkabcd1], e1
+Alice -> Server: [gka1], [gkab1], [gkabc1], [gkabcd1], e1
+
+principal Server[
+    leaks gka1, gkab1, gkabc1, gkabcd1
+]
+
+Server -> Bob: [gka1], [gkab1], [gkabc1], [gkabcd1], e1
+Server -> Charlie: [gka1], [gkab1], [gkabc1], [gkabcd1], e1
+Server -> Dave: [gka1], [gkab1], [gkabc1], [gkabcd1], e1
+Server -> Ellen: [gka1], [gkab1], [gkabc1], [gkabcd1], e1
 
 principal Bob[
     bkab1 = HASH(gka1^kb0)
@@ -107,10 +110,16 @@ principal Bob[
     e2 = AEAD_ENC(bkabcde2, m2, c0)
 ]
 
-Bob -> Alice: [gkb2], [gkab2], [gkabc2], [gkabcd2], e2
-Bob -> Charlie: [gkb2], [gkab2], [gkabc2], [gkabcd2], e2
-Bob -> Dave: [gkb2], [gkab2], [gkabc2], [gkabcd2], e2
-Bob -> Ellen: [gkb2], [gkab2], [gkabc2], [gkabcd2], e2
+Bob -> Server: [gkb2], [gkab2], [gkabc2], [gkabcd2], e2
+
+principal Server[
+    leaks gkb2, gkab2, gkabc2, gkabcd2
+]
+
+Server -> Alice: [gkb2], [gkab2], [gkabc2], [gkabcd2], e2
+Server -> Charlie: [gkb2], [gkab2], [gkabc2], [gkabcd2], e2
+Server -> Dave: [gkb2], [gkab2], [gkabc2], [gkabcd2], e2
+Server -> Ellen: [gkb2], [gkab2], [gkabc2], [gkabcd2], e2
 
 principal Alice[
     akab2 = HASH(gkb2^ka1)
@@ -150,10 +159,16 @@ principal Charlie[
     e3 = AEAD_ENC(ckabcde3, m3, c0)
 ]
 
-Charlie -> Alice: [gkc3], [gkcd3], [gkabcd3], e3
-Charlie -> Bob: [gkc3], [gkcd3], [gkabcd3], e3
-Charlie -> Dave: [gkc3], [gkcd3], [gkabcd3], e3
-Charlie -> Ellen: [gkc3], [gkcd3], [gkabcd3], e3
+Charlie -> Server: [gkc3], [gkcd3], [gkabcd3], e3
+
+principal Server[
+    leaks gkc3, gkcd3, gkabcd3
+]
+
+Server -> Alice: [gkc3], [gkcd3], [gkabcd3], e3
+Server -> Bob: [gkc3], [gkcd3], [gkabcd3], e3
+Server -> Dave: [gkc3], [gkcd3], [gkabcd3], e3
+Server -> Ellen: [gkc3], [gkcd3], [gkabcd3], e3
 
 principal Alice[
     akabcd3 = HASH(gkcd3^akab2)
@@ -191,10 +206,16 @@ principal Dave[
     e4 = AEAD_ENC(dkabcde4, m4, c0)
 ]
 
-Dave -> Alice: [gkd4], [gkcd4], [gkabcd4], e4
-Dave -> Bob: [gkd4], [gkcd4], [gkabcd4], e4
-Dave -> Charlie: [gkd4], [gkcd4], [gkabcd4], e4
-Dave -> Ellen: [gkd4], [gkcd4], [gkabcd4], e4
+Dave -> Server: [gkd4], [gkcd4], [gkabcd4], e4
+
+principal Server[
+    leaks gkd4, gkcd4, gkabcd4
+]
+
+Server -> Alice: [gkd4], [gkcd4], [gkabcd4], e4
+Server -> Bob: [gkd4], [gkcd4], [gkabcd4], e4
+Server -> Charlie: [gkd4], [gkcd4], [gkabcd4], e4
+Server -> Ellen: [gkd4], [gkcd4], [gkabcd4], e4
 
 principal Alice[
     akabcd4 = HASH(gkcd4^akab2)
@@ -228,10 +249,16 @@ principal Ellen[
     e5 = AEAD_ENC(ekabcde5, m5, c0)
 ]
 
-Ellen -> Alice: [gke5], e5
-Ellen -> Bob: [gke5], e5
-Ellen -> Charlie: [gke5], e5
-Ellen -> Dave: [gke5], e5
+Ellen -> Server: [gke5], e5
+
+principal Server[
+    leaks gke5
+]
+
+Server -> Alice: [gke5], e5
+Server -> Bob: [gke5], e5
+Server -> Charlie: [gke5], e5
+Server -> Dave: [gke5], e5
 
 principal Alice[
     akabcde5 = HASH(gke5^akabcd4)
