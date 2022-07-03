@@ -16,7 +16,7 @@ import (
 	"golang.org/x/crypto/hkdf"
 )
 
-type ExchangeMethodType func(*Ratchet, map[string]NodePublicKey) ([]byte, map[string]NodePublicKey)
+type ExchangeMethodType func(*Ratchet, map[string]NodePublicKey) ([]byte, map[string]NodePublicKey, []string)
 
 type Ratchet struct {
 	Id             string
@@ -63,9 +63,9 @@ func (rat *Ratchet) UpdateKey() []byte {
 	return rat.PublicKey
 }
 
-func (rat *Ratchet) Exchange(nodePublicKey map[string]NodePublicKey) ([]byte, map[string]NodePublicKey) {
-	sharedKey, nodeKeys := rat.ExchangeMethod(rat, nodePublicKey)
-	return sharedKey, nodeKeys
+func (rat *Ratchet) Exchange(nodePublicKey map[string]NodePublicKey) ([]byte, map[string]NodePublicKey, []string) {
+	sharedKey, nodeKeys, nodes := rat.ExchangeMethod(rat, nodePublicKey)
+	return sharedKey, nodeKeys, nodes
 }
 
 func (rat *Ratchet) ForwardChainRatchet() []byte {
@@ -88,33 +88,33 @@ func Pkcs7Pad(data []byte) []byte {
 	return append(data, trailing...)
 }
 
-func (rat *Ratchet) Encrypt(payload string) Message {
+func (rat *Ratchet) Encrypt(payload string) (Message, []string) {
 	payloadBytes := []byte(payload)
 	padded := Pkcs7Pad(payloadBytes)
 	encrypted := make([]byte, len(padded)+aes.BlockSize)
 	iv := encrypted[:aes.BlockSize]
 	io.ReadFull(rand.Reader, iv)
 	//if rat.speaker != &rat.Id {
-		publicKey := rat.UpdateKey()
-		sharedKey, nodeKeys := rat.Exchange(make(map[string]NodePublicKey))
-		//rat.ForwardRootRatchet(sharedKey)
-		//key := rat.ForwardChainRatchet()
-		//rat.speaker = &rat.Id
-		//block, _ := aes.NewCipher(key)
-		block, _ := aes.NewCipher(sharedKey)
-		encrypter := cipher.NewCBCEncrypter(block, iv)
-		encrypter.CryptBlocks(encrypted[aes.BlockSize:], padded)
-		return Message{
-			MessageHeader{
-				MemberId:       rat.Id,
-				PublicKey:      &publicKey,
-				NodePublicKeys: &nodeKeys,
-			},
-			MessageBody{
-				RawPayload:    payload,
-				CipherPayload: encrypted,
-			},
-		}
+	publicKey := rat.UpdateKey()
+	sharedKey, nodeKeys, nodes := rat.Exchange(make(map[string]NodePublicKey))
+	//rat.ForwardRootRatchet(sharedKey)
+	//key := rat.ForwardChainRatchet()
+	//rat.speaker = &rat.Id
+	//block, _ := aes.NewCipher(key)
+	block, _ := aes.NewCipher(sharedKey)
+	encrypter := cipher.NewCBCEncrypter(block, iv)
+	encrypter.CryptBlocks(encrypted[aes.BlockSize:], padded)
+	return Message{
+		MessageHeader{
+			MemberId:       rat.Id,
+			PublicKey:      &publicKey,
+			NodePublicKeys: &nodeKeys,
+		},
+		MessageBody{
+			RawPayload:    payload,
+			CipherPayload: encrypted,
+		},
+	}, nodes
 	/*} else {
 		key := rat.ForwardChainRatchet()
 		block, _ := aes.NewCipher(key)
@@ -138,17 +138,17 @@ func Pkcs7Unpad(data []byte) []byte {
 	return data[:dataLength-padLength]
 }
 
-func (rat *Ratchet) Decrypt(message Message) string {
+func (rat *Ratchet) Decrypt(message Message) (string, []string) {
 	if rat.speaker != &message.MessageHeader.MemberId {
 		rat.UpdateMemberPublicKey(message.MessageHeader.MemberId, *message.MessageHeader.PublicKey)
 		//sharedKey, _ := rat.Exchange(*message.MessageHeader.NodePublicKeys)
 		//rat.ForwardRootRatchet(sharedKey)
 	}
-	key, _ := rat.Exchange(*message.MessageHeader.NodePublicKeys)
+	key, _, tree := rat.Exchange(*message.MessageHeader.NodePublicKeys)
 	rawPayload := make([]byte, len(message.MessageBody.CipherPayload)-aes.BlockSize)
 	//key := rat.ForwardChainRatchet()
 	block, _ := aes.NewCipher(key)
 	cbc := cipher.NewCBCDecrypter(block, message.MessageBody.CipherPayload[:aes.BlockSize])
 	cbc.CryptBlocks(rawPayload, message.MessageBody.CipherPayload[aes.BlockSize:])
-	return string(Pkcs7Unpad(rawPayload))
+	return string(Pkcs7Unpad(rawPayload)), tree
 }

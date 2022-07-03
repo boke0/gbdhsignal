@@ -163,6 +163,17 @@ func (tree *KeyExchangeTreeNode) AttachKeys(keys hippocampus.Hippocampus[NodePub
 	}
 }
 
+func (tree KeyExchangeTreeNode) NodeIds() []string {
+	ids := []string{tree.Id}
+	if tree.Left != nil {
+		ids = append(ids, tree.Left.NodeIds()...)
+	}
+	if tree.Right != nil {
+		ids = append(ids, tree.Right.NodeIds()...)
+	}
+	return ids
+}
+
 func (tree *KeyExchangeTreeNode) Exists(key string) bool {
 	if tree.Id == key {
 		return true
@@ -211,7 +222,7 @@ func merge(m ...map[string]NodePublicKey) map[string]NodePublicKey {
     return ans
 }
 
-func ATGDHExchange(rat *Ratchet, nodePublicKeys map[string]NodePublicKey) ([]byte, map[string]NodePublicKey) {
+func ATGDHExchange(rat *Ratchet, nodePublicKeys map[string]NodePublicKey) ([]byte, map[string]NodePublicKey, []string) {
 	var tree KeyExchangeTreeNode
 	members := SortMembers(rat.Members)
 	for i := 0; i < len(rat.Members); i += 2 {
@@ -236,7 +247,7 @@ func ATGDHExchange(rat *Ratchet, nodePublicKeys map[string]NodePublicKey) ([]byt
 	}
 	tree.AttachKeys(rat.Cache)
 	sharedKey, nodeKeys := tree.Exchange()
-	return sharedKey, nodeKeys
+	return sharedKey, nodeKeys, tree.NodeIds()
 }
 
 func printTree(node *KeyExchangeTreeNode, space int) {

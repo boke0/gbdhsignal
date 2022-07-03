@@ -32,6 +32,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, ", %s", ratchets[i].Id)
 	}
 	fmt.Println("")
+	fmt.Fprintln(os.Stderr, "")
 	cwd, _ := os.Getwd()
 	for i := 0; i < 5000; i++ {
 		if cacheExists(path.Join(cwd, "./.cache/"+ratchets[i%500].Id+".json")) {
@@ -40,14 +41,20 @@ func main() {
 			ratchets[i%500].Cache.Engine = engine
 		}
 		enc_start := time.Now()
-		message := ratchets[i%500].Encrypt("hogehogehugahugapiyopiyo")
+		message, tree := ratchets[i%500].Encrypt("hogehogehugahugapiyopiyo")
 		enc_ticks := time.Since(enc_start).Microseconds()
 		fmt.Printf("%d, %d", i, enc_ticks)
 		fmt.Fprintf(os.Stderr, "%d, %d", i, enc_ticks)
 		{
 			engine, _ := ratchets[i%500].Cache.Engine.(InmemoryEngine[NodePublicKey])
-			engine.Export("./.cache/" + ratchets[i%500].Id + ".json")
-			engine.Clear()
+			engine_ := NewInmemoryEngine[NodePublicKey]()
+			for _, id := range tree {
+				if value := engine.Get(id); value != nil {
+					engine_.Set(id, *value)
+				}
+			}
+			engine_.Export("./.cache/" + ratchets[i%500].Id + ".json")
+			ratchets[i%500].Cache.Engine = engine_
 		}
 		for j := 0; j < 500; j++ {
 			if (i % 500) != j {
@@ -62,9 +69,14 @@ func main() {
 				fmt.Printf(", %d", dec_tick)
 				fmt.Fprintf(os.Stderr, ", %d", dec_tick)
 				engine, _ := ratchets[j].Cache.Engine.(InmemoryEngine[NodePublicKey])
-				engine.Export("./.cache/" + ratchets[j].Id + ".json")
-				engine.Clear()
-				ratchets[j].Cache.Engine = engine
+				engine_ := NewInmemoryEngine[NodePublicKey]()
+				for _, id := range tree {
+					if value := engine.Get(id); value != nil {
+						engine_.Set(id, *value)
+					}
+				}
+				engine_.Export("./.cache/" + ratchets[j].Id + ".json")
+				ratchets[j].Cache.Engine = engine_
 			} else {
 				fmt.Printf(", ")
 				fmt.Fprintf(os.Stderr, ", ")
