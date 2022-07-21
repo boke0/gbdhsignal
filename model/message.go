@@ -1,22 +1,21 @@
 package model
 
 type Message struct {
-	MessageHeader MessageHeader
-	MessageBody   MessageBody
+	MessageHeader MessageHeader `json:"h"`
+	MessageBody   MessageBody `json:"b"`
 }
 
 type NodePublicKey struct {
-	NodeId    string
-	PublicKey []byte
+	PublicKey []byte `json:"k"`
 }
 
 type MessageHeader struct {
-	MemberId       string
-	PublicKey      *[]byte
-	NodePublicKeys *map[string]NodePublicKey
+	MemberId       string                    `json:"m"`
+	PublicKey      *[]byte                   `json:"k"`
+	NodePublicKeys *map[string]NodePublicKey `json:"l"`
 }
 
 type MessageBody struct {
-	RawPayload    string
-	CipherPayload []byte
+	RawPayload    string `json:"-"`
+	CipherPayload []byte `json:"p"`
 }

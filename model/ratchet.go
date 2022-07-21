@@ -17,25 +17,31 @@ import (
 )
 
 type ExchangeMethodType func(*Ratchet, map[string]NodePublicKey) ([]byte, map[string]NodePublicKey, []string)
+type ExchangeEmulationMethodType func(*Ratchet) (int, int)
+type ActivateMethodType func([]RoomMember, string) []RoomMember
 
 type Ratchet struct {
-	Id             string
-	Cache          hippocampus.Hippocampus[NodePublicKey]
-	PrivateKey     []byte
-	PublicKey      []byte
-	ChainKey       []byte
-	RootKey        []byte
-	Members        []RoomMember
-	ExchangeMethod ExchangeMethodType
-	speaker        *string
+	Id                      string
+	Cache                   hippocampus.Hippocampus[NodePublicKey]
+	PrivateKey              []byte
+	PublicKey               []byte
+	ChainKey                []byte
+	RootKey                 []byte
+	Members                 []RoomMember
+	ExchangeMethod          ExchangeMethodType
+	ExchangeEmulationMethod ExchangeEmulationMethodType
+	ActivateMethod          ActivateMethodType
+	speaker                 *string
 }
 
-func NewRatchet(id string, method ExchangeMethodType, members []RoomMember) Ratchet {
+func NewRatchet(id string, exchangeMethod ExchangeMethodType, exchangeEmulationMethod ExchangeEmulationMethodType, activateMethod ActivateMethodType, members []RoomMember) Ratchet {
 	return Ratchet{
 		speaker:        nil,
 		Id:             id,
 		Cache:          hippocampus.NewHippocampus[NodePublicKey](inmemory.NewInmemoryEngine[NodePublicKey]()),
-		ExchangeMethod: method,
+		ExchangeMethod: exchangeMethod,
+		ExchangeEmulationMethod: exchangeEmulationMethod,
+		ActivateMethod: activateMethod,
 		Members:        members,
 	}
 }
@@ -88,6 +94,14 @@ func Pkcs7Pad(data []byte) []byte {
 	return append(data, trailing...)
 }
 
+func (rat *Ratchet) Activate(id string) {
+	rat.Members = rat.ActivateMethod(rat.Members, id)
+}
+
+func (rat *Ratchet) EmulateBytes() (int, int) {
+	return rat.ExchangeEmulationMethod(rat)
+}
+
 func (rat *Ratchet) Encrypt(payload string) (Message, []string) {
 	payloadBytes := []byte(payload)
 	padded := Pkcs7Pad(payloadBytes)
@@ -96,6 +110,7 @@ func (rat *Ratchet) Encrypt(payload string) (Message, []string) {
 	io.ReadFull(rand.Reader, iv)
 	//if rat.speaker != &rat.Id {
 	publicKey := rat.UpdateKey()
+	rat.Members = rat.ActivateMethod(rat.Members, rat.Id)
 	sharedKey, nodeKeys, nodes := rat.Exchange(make(map[string]NodePublicKey))
 	//rat.ForwardRootRatchet(sharedKey)
 	//key := rat.ForwardChainRatchet()
@@ -144,6 +159,7 @@ func (rat *Ratchet) Decrypt(message Message) (string, []string) {
 		//sharedKey, _ := rat.Exchange(*message.MessageHeader.NodePublicKeys)
 		//rat.ForwardRootRatchet(sharedKey)
 	}
+	rat.Members = rat.ActivateMethod(rat.Members, message.MessageHeader.MemberId)
 	key, _, tree := rat.Exchange(*message.MessageHeader.NodePublicKeys)
 	rawPayload := make([]byte, len(message.MessageBody.CipherPayload)-aes.BlockSize)
 	//key := rat.ForwardChainRatchet()

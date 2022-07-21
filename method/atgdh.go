@@ -201,13 +201,48 @@ func (tree KeyExchangeTreeNode) Exchange() ([]byte, map[string]NodePublicKey) {
 		key := sha256.Sum256(result)
 		nodePublicKeys := map[string]NodePublicKey{
 			tree.Id: {
-				NodeId: tree.Id,
 				PublicKey: AsPublic(key[:]),
 			},
 		}
 		nodePublicKeys = merge(nodePublicKeys, nodeLeftPublicKeys)
 		nodePublicKeys = merge(nodePublicKeys, nodeRightPublicKeys)
 		return key[:], nodePublicKeys
+	}
+}
+
+func (tree KeyExchangeTreeNode) EmulateSendBytes() int {
+	if tree.PrivateKey != nil {
+		return 0
+	} else if tree.PublicKey != nil && !tree.HasPrivate() {
+		return 0
+	} else {
+		var nodeLeftPublicKeys, nodeRightPublicKeys int
+		if tree.Left.HasPrivate() {
+			nodeLeftPublicKeys = tree.Left.EmulateSendBytes()
+			nodeRightPublicKeys = tree.Right.EmulateSendBytes()
+		} else {
+			nodeRightPublicKeys = tree.Right.EmulateSendBytes()
+			nodeLeftPublicKeys = tree.Left.EmulateSendBytes()
+		}
+		return 32 + nodeLeftPublicKeys + nodeRightPublicKeys
+	}
+}
+
+func (tree KeyExchangeTreeNode) EmulateCacheBytes() int {
+	if tree.PrivateKey != nil {
+		return 32
+	} else if tree.PublicKey != nil && !tree.HasPrivate() {
+		return 32
+	} else {
+		var nodeLeftPublicKeys, nodeRightPublicKeys int
+		if tree.Left.HasPrivate() {
+			nodeLeftPublicKeys = tree.Left.EmulateSendBytes()
+			nodeRightPublicKeys = tree.Right.EmulateSendBytes()
+		} else {
+			nodeRightPublicKeys = tree.Right.EmulateSendBytes()
+			nodeLeftPublicKeys = tree.Left.EmulateSendBytes()
+		}
+		return 32 + nodeLeftPublicKeys + nodeRightPublicKeys
 	}
 }
 
@@ -222,9 +257,41 @@ func merge(m ...map[string]NodePublicKey) map[string]NodePublicKey {
     return ans
 }
 
+func ActivateATGDHMembers(members []RoomMember, sendorId string) []RoomMember {
+	for i, member := range members {
+		if member.Id == sendorId {
+			member.IsActive = true
+		}
+		members[i] = member
+	}
+	return members
+}
+
+func atgdhSortMembers(members []RoomMember) []RoomMember {
+	test := true
+	newMembers := members
+	for test {
+		test = false
+		for i := 0; i+1 < len(members); i += 2 {
+			if !(newMembers[i].IsActive || newMembers[i+1].IsActive) && i+3 < len(newMembers) {
+				if newMembers[i+2].IsActive || newMembers[i+3].IsActive {
+					t1 := newMembers[i]
+					t2 := newMembers[i+1]
+					newMembers[i] = newMembers[i+2]
+					newMembers[i+1] = newMembers[i+3]
+					newMembers[i+2] = t1
+					newMembers[i+3] = t2
+					test = true
+				}
+			}
+		}
+	}
+	return newMembers
+}
+
 func ATGDHExchange(rat *Ratchet, nodePublicKeys map[string]NodePublicKey) ([]byte, map[string]NodePublicKey, []string) {
 	var tree KeyExchangeTreeNode
-	members := SortMembers(rat.Members)
+	members := atgdhSortMembers(rat.Members)
 	for i := 0; i < len(rat.Members); i += 2 {
 		if i == 0 {
 			tree = NewKeyExchangeTreeNode(members[i], members[i+1])
@@ -248,6 +315,27 @@ func ATGDHExchange(rat *Ratchet, nodePublicKeys map[string]NodePublicKey) ([]byt
 	tree.AttachKeys(rat.Cache)
 	sharedKey, nodeKeys := tree.Exchange()
 	return sharedKey, nodeKeys, tree.NodeIds()
+}
+
+func ATGDHEmulation(rat *Ratchet) (int, int) {
+	var tree KeyExchangeTreeNode
+	members := atgdhSortMembers(rat.Members)
+	for i := 0; i < len(rat.Members); i += 2 {
+		if i == 0 {
+			tree = NewKeyExchangeTreeNode(members[i], members[i+1])
+		} else {
+			if len(members) > i+1 {
+				if members[i].IsActive || members[i+1].IsActive {
+					tree = tree.AddTwo(members[i], members[i+1])
+				} else {
+					tree = tree.Add(members[i]).Add(members[i+1])
+				}
+			} else {
+				tree = tree.Add(members[i])
+			}
+		}
+	}
+	return tree.EmulateSendBytes(), tree.EmulateCacheBytes()
 }
 
 func printTree(node *KeyExchangeTreeNode, space int) {
